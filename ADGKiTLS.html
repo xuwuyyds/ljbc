@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADGKiTLS - 破解ADG拦截规则</title>
+    <style>
+        :root {
+            --primary: #E8594A;
+            --primary-dark: #C4473A;
+            --primary-light: #FF6B5A;
+            --bg: #FBF5F3;
+            --card: #FFFFFF;
+            --text: #2C1810;
+            --text-secondary: #8B6B5A;
+            --border: #F0E8E5;
+            --hint: #C4A99E;
+            --success: #4CAF50;
+            --gradient-1: linear-gradient(135deg, #E8594A 0%, #FF6B5A 100%);
+            --gradient-2: linear-gradient(135deg, #FF6B5A 0%, #FF8E7A 100%);
+            --shadow-sm: 0 2px 8px rgba(232, 89, 74, 0.08);
+            --shadow-md: 0 4px 16px rgba(232, 89, 74, 0.12);
+            --shadow-lg: 0 8px 32px rgba(232, 89, 74, 0.16);
+            --shadow-xl: 0 16px 48px rgba(232, 89, 74, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 背景粒子 */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0;
+            animation: floatUp 8s infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) scale(0) rotate(0deg);
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.5) rotate(360deg);
+            }
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(232, 89, 74, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(232, 89, 74, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 24px rgba(232, 89, 74, 0.5);
+            }
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 4px 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-1);
+            border-radius: 1px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* 主内容 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 40px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero区域 */
+        .hero {
+            display: flex;
+            align-items: center;
+            gap: 80px;
+            min-height: 500px;
+            padding: 40px 0;
+        }
+
+        .hero-content {
+            flex: 1;
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(232, 89, 74, 0.08);
+            border: 1px solid rgba(232, 89, 74, 0.2);
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .hero-title {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(232, 89, 74, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .hero-visual {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hero-phone {
+            width: 280px;
+            height: 560px;
+            background: var(--card);
+            border-radius: 40px;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            border: 3px solid var(--border);
+            overflow: hidden;
+            animation: phoneFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes phoneFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+            25% {
+                transform: translateY(-15px) rotate(1deg);
+            }
+            50% {
+                transform: translateY(-5px) rotate(2deg);
+            }
+            75% {
+                transform: translateY(-20px) rotate(-1deg);
+            }
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 28px;
+            background: var(--text);
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        .phone-screen {
+            padding: 60px 24px 30px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #FFF5F3 0%, #FFFFFF 100%);
+        }
+
+        .phone-app-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-1);
+            border-radius: 14px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(232, 89, 74, 0.3);
+        }
+
+        .phone-app-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .phone-app-subtitle {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .phone-feature {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .phone-feature-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .phone-feature-icon.red {
+            background: rgba(232, 89, 74, 0.1);
+            color: var(--primary);
+        }
+
+        .phone-feature-icon.green {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+
+        /* 特性卡片 */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin: 80px 0;
+        }
+
+        .feature-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(232, 89, 74, 0.03) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-light);
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon.red {
+            background: linear-gradient(135deg, rgba(232, 89, 74, 0.1), rgba(255, 107, 90, 0.1));
+        }
+
+        .feature-icon.orange {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 183, 77, 0.1));
+        }
+
+        .feature-icon.purple {
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(186, 104, 200, 0.1));
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 下载区域 */
+        .download-section {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 60px;
+            text-align: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            margin: 80px 0;
+        }
+
+        .download-section::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(232, 89, 74, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .download-section::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(255, 107, 90, 0.04) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .download-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 24px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: var(--shadow-xl);
+            animation: downloadPulse 2s infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes downloadPulse {
+            0%, 100% {
+                box-shadow: 0 8px 32px rgba(232, 89, 74, 0.3);
+            }
+            50% {
+                box-shadow: 0 8px 48px rgba(232, 89, 74, 0.5);
+            }
+        }
+
+        .download-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .download-version {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .download-info {
+            color: var(--hint);
+            font-size: 13px;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 48px;
+            background: var(--gradient-1);
+            color: white;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            border: none;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .download-btn:active {
+            transform: scale(0.96);
+        }
+
+        .download-btn .download-icon-svg {
+            width: 24px;
+            height: 24px;
+            animation: bounceDown 1.5s infinite;
+        }
+
+        @keyframes bounceDown {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(4px);
+            }
+        }
+
+        /* 滚动动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-success-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(76, 175, 80, 0.1);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            animation: successPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+            }
+            80% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .modal h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .modal-btn {
+            padding: 12px 32px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--hint);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                gap: 40px;
+                min-height: auto;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-phone {
+                width: 220px;
+                height: 440px;
+            }
+
+            .nav-inner {
+                padding: 12px 20px;
+            }
+
+            .main-container {
+                padding: 80px 20px 40px;
+            }
+
+            .download-section {
+                padding: 40px 24px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景粒子 -->
+    <div class="particles-container" id="particles"></div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <div class="nav-logo" onclick="scrollToTop()">
+                <div class="logo-icon">🎵</div>
+                <span class="logo-text">ADGKiTLS</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">功能特性</a>
+                <a href="#download" class="nav-link">下载</a>
+                <a href="#about" class="nav-link">关于</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-container">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    最新版本 v1.0
+                </div>
+                <h1 class="hero-title">破解ADG<br>拦截规则</h1>
+                <p class="hero-subtitle">
+                    强大的Root执行器，自动绕过ADG应用拦截检测<br>
+                    由虚无提供思路并制作.feat.虚无
+                </p>
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        立即下载
+                    </a>
+                    <a href="#features" class="btn btn-outline">了解更多</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-phone">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-app-icon">🔓</div>
+                        <div class="phone-app-title">ADGKiTLS</div>
+                        <div class="phone-app-subtitle">by.虚无</div>
+                        <div class="phone-feature">
+                            <div class="phone-feature-icon red">✓</div>
+                            Root权限执行
+                        </div>
+                        <div class="phone-feature">
+                            <div class="phone-feature-icon green">⚡</div>
+                            批量规则破解
+                        </div>
+                        <div class="phone-feature">
+                            <div class="phone-feature-icon red">🛡</div>
+                            自动绕过检测
+                        </div>
+                        <div class="phone-feature">
+                            <div class="phone-feature-icon green">📦</div>
+                            核心文件下载
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特性卡片 -->
+        <section class="features" id="features">
+            <div class="feature-card fade-in">
+                <div class="feature-icon red">🔓</div>
+                <h3>Root执行器</h3>
+                <p>基于Root权限的二进制执行引擎，稳定高效地破解ADG拦截规则</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon orange">⚡</div>
+                <h3>批量处理</h3>
+                <p>支持批量ADG规则破解，一次性处理多个应用的拦截问题</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon purple">🛡</div>
+                <h3>自动绕过</h3>
+                <p>智能检测并自动绕过ADG的拦截检测机制，无需手动配置</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon red">📦</div>
+                <h3>核心下载</h3>
+                <p>内置核心文件下载功能，自动获取最新版本的核心二进制文件</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon orange">📋</div>
+                <h3>实时公告</h3>
+                <p>自动同步服务器公告，第一时间获取更新和使用提示</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon purple">🎨</div>
+                <h3>精美界面</h3>
+                <p>网易云暖色调设计风格，卡片式布局，操作简洁流畅</p>
+            </div>
+        </section>
+
+        <!-- 下载区域 -->
+        <section class="download-section fade-in" id="download">
+            <div class="download-icon">📱</div>
+            <h2 class="download-title">下载 ADGKiTLS</h2>
+            <p class="download-version">版本 v1.0 · 加密签名版</p>
+            <p class="download-info">支持 Android 5.0+ · 需要Root权限 · 大小约 7.5MB</p>
+            <button class="download-btn" onclick="startDownload()">
+                <svg class="download-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                下载 APK
+            </button>
+        </section>
+    </div>
+
+    <!-- 下载弹窗 -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal">
+            <div class="modal-success-icon" id="modalIcon">📥</div>
+            <h3 id="modalTitle">准备下载</h3>
+            <p id="modalText">正在为您准备下载链接...</p>
+            <button class="modal-btn" id="modalBtn" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer" id="about">
+        <p>by.虚无 © 2026 · 仅供学习交流 · <a href="https://gitee.com/void-xm/xuwulj" target="_blank">xxxwphub</a></p>
+    </footer>
+
+    <script>
+        // 下载地址
+        const DOWNLOAD_URL = 'https://gitee.com/void-xm/xuwulj/raw/master/ADGKiTLS_1.0_Encrypted_signed_merge_edit_ace.apk';
+
+        // 背景粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#E8594A', '#FF6B5A', '#FF8E7A', '#FFB3A7', '#F0E8E5'];
+            
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = (Math.random() * 6 + 2) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDuration = (Math.random() * 10 + 6) + 's';
+                particle.style.animationDelay = (Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 滚动动画
+        function handleScrollAnimation() {
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                if (rect.top < windowHeight * 0.85) {
+                    el.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScrollAnimation);
+        window.addEventListener('load', handleScrollAnimation);
+        handleScrollAnimation();
+
+        // 回到顶部
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 弹窗
+        function showModal(icon, title, text, btnText) {
+            document.getElementById('modalIcon').textContent = icon;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('modalBtn').textContent = btnText;
+            document.getElementById('downloadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('downloadModal').classList.remove('active');
+        }
+
+        document.getElementById('downloadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 下载功能
+        function startDownload() {
+            showModal('📥', '开始下载', '正在为您准备下载...\n下载将自动开始', '请稍候');
+            
+            // 延迟开始下载，让用户看到弹窗
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = DOWNLOAD_URL;
+                link.download = 'ADGKiTLS_v1.0.apk';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // 更新弹窗
+                document.getElementById('modalIcon').textContent = '✅';
+                document.getElementById('modalTitle').textContent = '下载已开始';
+                document.getElementById('modalText').textContent = '如果下载未自动开始，请检查浏览器弹窗设置\n或点击下方按钮手动下载';
+                document.getElementById('modalBtn').textContent = '手动下载';
+                document.getElementById('modalBtn').onclick = function() {
+                    window.open(DOWNLOAD_URL, '_blank');
+                    closeModal();
+                };
+                
+                showToast('下载已开始！');
+            }, 800);
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.key === 'd' && e.ctrlKey) {
+                e.preventDefault();
+                startDownload();
+            }
+        });
+
+        // 初始化
+        createParticles();
+
+        // 鼠标跟随光晕效果
+        document.addEventListener('mousemove', function(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            document.querySelectorAll('.feature-card:hover').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (x - cx) / rect.width;
+                const dy = (y - cy) / rect.height;
+                card.style.transform = `translateY(-8px) rotateX(${-dy * 5}deg) rotateY(${dx * 5}deg)`;
+            });
+        });
+
+        console.log('%c🎵 ADGKiTLS %cby.虚无',
+            'font-size: 24px; font-weight: bold; color: #E8594A;',
+            'font-size: 14px; color: #8B6B5A;');
+        console.log('%c破解ADG拦截规则 · Root执行器',
+            'font-size: 12px; color: #C4A99E;');
+        console.log('%cCtrl+D 快速下载',
+            'font-size: 11px; color: #E8594A; background: rgba(232,89,74,0.1); padding: 4px 8px; border-radius: 4px;');
+    </script>
+</body>
+</html>
