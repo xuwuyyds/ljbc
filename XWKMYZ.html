@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>虚无卡密 · 高级网络验证系统</title>
+  <!-- 使用 Inter 与 JetBrains Mono 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ----- 全局重置 & 基础 ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f0f4fe;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      color: #14273e;
+      transition: background 0.3s;
+    }
+
+    /* ----- 动态网格背景 (科技感) ----- */
+    .grid-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.3;
+      background-image: 
+        linear-gradient(rgba(43, 122, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(43, 122, 255, 0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    }
+
+    /* 动态光晕 */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(70px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.3;
+      transition: transform 0.2s ease;
+    }
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #2b7aff20, transparent 70%);
+      top: -10%;
+      left: -5%;
+      animation: floatOrb 16s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #00c8c820, transparent 70%);
+      bottom: -8%;
+      right: -5%;
+      animation: floatOrb 20s ease-in-out infinite alternate-reverse;
+    }
+    .orb-3 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #a371f720, transparent 70%);
+      top: 40%;
+      right: 10%;
+      animation: floatOrb 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    /* ----- 主卡片 (玻璃态 + 精致阴影) ----- */
+    .card {
+      position: relative;
+      z-index: 2;
+      max-width: 860px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-radius: 48px;
+      padding: 3rem 2.8rem;
+      box-shadow: 
+        0 30px 80px rgba(20, 40, 80, 0.08),
+        0 10px 30px rgba(20, 40, 80, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 40px 100px rgba(20, 40, 80, 0.12);
+    }
+
+    /* 卡内装饰线 */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #2b7aff60, #00c8c860, transparent);
+      border-radius: 48px 48px 0 0;
+      opacity: 0.6;
+    }
+
+    /* ----- 头部标识 (科技感标签) ----- */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(43, 122, 255, 0.07);
+      padding: 0.4rem 1.2rem 0.4rem 1.2rem;
+      border-radius: 60px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #1f3a6b;
+      border: 1px solid rgba(43, 122, 255, 0.12);
+      margin-bottom: 1.8rem;
+      backdrop-filter: blur(4px);
+      transition: all 0.3s;
+      cursor: default;
+    }
+    .badge:hover {
+      background: rgba(43, 122, 255, 0.12);
+      border-color: rgba(43, 122, 255, 0.25);
+    }
+
+    .badge .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #2b7aff;
+      border-radius: 50%;
+      animation: pulse-dot 2.2s infinite;
+      box-shadow: 0 0 12px #2b7aff60;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.25); }
+      100% { opacity: 0.3; transform: scale(0.85); }
+    }
+
+    .badge .status-text {
+      font-weight: 400;
+      color: #3d5a8c;
+      letter-spacing: 0.3px;
+    }
+
+    /* ----- 标题区 (动态渐变) ----- */
+    .title-block {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      background: linear-gradient(145deg, #0b1f3b, #1f3f77);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    .version-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #3d5a8c;
+      background: rgba(0,0,0,0.02);
+      padding: 0.2rem 0.9rem;
+      border-radius: 40px;
+      border: 1px solid rgba(0,0,0,0.04);
+      letter-spacing: 0.2px;
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .subhead {
+      font-size: 1rem;
+      color: #2d466e;
+      font-weight: 400;
+      margin: 0.5rem 0 1.8rem 0;
+      padding-left: 1.2rem;
+      border-left: 3px solid #2b7aff;
+      background: rgba(43, 122, 255, 0.02);
+      border-radius: 0 12px 12px 0;
+      line-height: 1.6;
+      padding: 0.6rem 1.2rem;
+      backdrop-filter: blur(2px);
+    }
+
+    .subhead strong {
+      font-weight: 600;
+      color: #0b1f3b;
+    }
+
+    /* ----- 特性网格 (更精致) ----- */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0 2rem 0;
+    }
+
+    .feature-item {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(6px);
+      padding: 1.2rem 1rem;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(43,122,255,0.02), transparent);
+      pointer-events: none;
+    }
+
+    .feature-item:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 12px 32px rgba(43, 122, 255, 0.08);
+      border-color: rgba(43, 122, 255, 0.15);
+    }
+
+    .feature-item .label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #3d5a8c;
+      margin-bottom: 0.4rem;
+      opacity: 0.8;
+    }
+
+    .feature-item .value {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: #0b1f3b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .feature-item .value small {
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: #5b6f8f;
+      background: rgba(0,0,0,0.02);
+      padding: 0.05rem 0.6rem;
+      border-radius: 40px;
+    }
+
+    .feature-item .icon-deco {
+      font-size: 1.2rem;
+      opacity: 0.5;
+      margin-right: 4px;
+    }
+
+    /* ----- 分隔线 (科技风) ----- */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(43, 122, 255, 0.15), rgba(0, 200, 200, 0.10), transparent);
+      margin: 0.8rem 0 1.8rem 0;
+    }
+
+    /* ----- 下载区域 (交互强化) ----- */
+    .download-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 1rem 1.5rem 1rem 1.8rem;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .download-section:hover {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(43, 122, 255, 0.15);
+      box-shadow: 0 8px 30px rgba(43, 122, 255, 0.06);
+    }
+
+    .download-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .download-info .icon-box {
+      width: 48px;
+      height: 48px;
+      background: rgba(43, 122, 255, 0.06);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(43, 122, 255, 0.06);
+      transition: all 0.3s;
+    }
+
+    .download-info .icon-box svg {
+      stroke: #1f3a6b;
+      transition: stroke 0.3s;
+    }
+
+    .download-info .file-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .download-info .file-name {
+      font-weight: 600;
+      color: #0b1f3b;
+      font-size: 1rem;
+      letter-spacing: -0.2px;
+    }
+
+    .download-info .file-size {
+      font-size: 0.7rem;
+      color: #5b6f8f;
+      background: rgba(0,0,0,0.02);
+      padding: 0.1rem 0.8rem;
+      border-radius: 40px;
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #0b1f3b;
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 60px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 6px 20px rgba(11, 31, 59, 0.20);
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-download::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      transition: left 0.6s;
+    }
+
+    .btn-download:hover::before {
+      left: 100%;
+    }
+
+    .btn-download:hover {
+      background: #1a2f55;
+      transform: scale(1.02);
+      box-shadow: 0 10px 32px rgba(11, 31, 59, 0.28);
+    }
+
+    .btn-download:active {
+      transform: scale(0.97);
+    }
+
+    .btn-download svg {
+      transition: transform 0.3s;
+    }
+
+    .btn-download:hover svg {
+      transform: translateY(2px);
+    }
+
+    /* 下载进度交互 (点击反馈) */
+    .btn-download.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* ----- 页脚 (精致) ----- */
+    .footer-note {
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #4a6180;
+      text-align: center;
+      border-top: 1px solid rgba(0, 0, 0, 0.03);
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      letter-spacing: 0.2px;
+    }
+
+    .footer-note .highlight {
+      color: #1f3a6b;
+      font-weight: 600;
+      opacity: 1;
+      transition: color 0.2s;
+      cursor: default;
+    }
+
+    .footer-note .highlight:hover {
+      color: #2b7aff;
+    }
+
+    .footer-note .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      opacity: 0.6;
+    }
+
+    /* ----- 响应式 ----- */
+    @media (max-width: 700px) {
+      .card {
+        padding: 2rem 1.5rem;
+        border-radius: 32px;
+      }
+      h1 {
+        font-size: 2.6rem;
+      }
+      .title-block {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .features {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+      }
+      .download-section {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.2rem;
+      }
+      .btn-download {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.5rem 1rem;
+        border-radius: 28px;
+      }
+      h1 {
+        font-size: 2.1rem;
+      }
+      .features {
+        grid-template-columns: 1fr;
+      }
+      .subhead {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+      }
+      .badge {
+        font-size: 0.6rem;
+        padding: 0.3rem 1rem;
+      }
+      .footer-note {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    /* ----- 工具类 ----- */
+    .flex-center { display: flex; align-items: center; gap: 0.5rem; }
+    .mt-1 { margin-top: 0.5rem; }
+    .mb-1 { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- 背景装饰 -->
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- ===== 主卡片 ===== -->
+  <div class="card" id="appCard">
+
+    <!-- 头部标识 -->
+    <div class="badge">
+      <span class="dot"></span>
+      <span>网络验证</span>
+      <span class="status-text">· 卡密系统</span>
+      <span style="margin-left:6px;opacity:0.4;">|</span>
+      <span style="font-weight:400;opacity:0.7;" id="liveStatus">在线</span>
+    </div>
+
+    <!-- 标题 -->
+    <div class="title-block">
+      <h1>虚无卡密</h1>
+      <span class="version-chip">v2.1 · 轻量协议</span>
+    </div>
+
+    <div class="subhead">
+      <strong>去中心化验证</strong> 基于 GitHub Raw 分发，HMAC 动态校验，<br class="hide-mobile" />
+      支持永久 / 限时卡密，硬件指纹绑定，防复用。
+    </div>
+
+    <!-- 特性网格 (互动: 悬停高亮) -->
+    <div class="features" id="featureGrid">
+      <div class="feature-item" data-feature="auth">
+        <div class="label">验证引擎</div>
+        <div class="value"><span class="icon-deco">⚡</span>HMAC-SHA256 <small>动态</small></div>
+      </div>
+      <div class="feature-item" data-feature="type">
+        <div class="label">卡密类型</div>
+        <div class="value"><span class="icon-deco">∞</span>永久 / 限时 <small>1~30天</small></div>
+      </div>
+      <div class="feature-item" data-feature="storage">
+        <div class="label">存储后端</div>
+        <div class="value"><span class="icon-deco">▣</span>GitHub Raw <small>纯文本</small></div>
+      </div>
+      <div class="feature-item" data-feature="bind">
+        <div class="label">设备绑定</div>
+        <div class="value"><span class="icon-deco">◈</span>指纹绑定 <small>防共享</small></div>
+      </div>
+    </div>
+
+    <!-- 分割线 -->
+    <div class="divider"></div>
+
+    <!-- 下载区域 (交互: 点击反馈) -->
+    <div class="download-section" id="downloadSection">
+      <div class="download-info">
+        <div class="icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </div>
+        <div class="file-meta">
+          <span class="file-name">kami.sh</span>
+          <span class="file-size">约 9 KB · 安装脚本</span>
+        </div>
+      </div>
+      <a class="btn-download" id="downloadBtn" href="https://gitee.com/void-xm/kami/raw/main/kami.sh" download="网络验证系统.zip">
+        <span>下载脚本</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer-note">
+      <span>基于 <span class="highlight">GitHub</span> · <span class="highlight">Gitee</span> 双源同步</span>
+      <span class="mono">开放协议 · 无追踪</span>
+      <span>维护 · <span class="highlight">xuwu</span></span>
+    </div>
+  </div>
+
+  <!-- ===== 交互脚本 (轻量 + 精致反馈) ===== -->
+  <script>
+    (function() {
+      // ---- 下载按钮交互 (模拟反馈) ----
+      const downloadBtn = document.getElementById('downloadBtn');
+      const downloadSection = document.getElementById('downloadSection');
+
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', function(e) {
+          // 仅做视觉反馈，不干扰实际下载
+          this.classList.add('loading');
+          this.innerHTML = '<span>准备中...</span>';
+          
+          // 恢复 (但下载会跳转，这里做备用)
+          setTimeout(() => {
+            this.classList.remove('loading');
+            this.innerHTML = `
+              <span>下载脚本</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            `;
+          }, 3000);
+        });
+      }
+
+      // ---- 特性卡片交互 (鼠标悬浮动态光效) ----
+      const featureItems = document.querySelectorAll('.feature-item');
+      featureItems.forEach((item, index) => {
+        item.addEventListener('mouseenter', function() {
+          // 增加微光晕 (通过box-shadow)
+          this.style.boxShadow = '0 12px 32px rgba(43, 122, 255, 0.10)';
+          this.style.borderColor = 'rgba(43, 122, 255, 0.2)';
+        });
+        item.addEventListener('mouseleave', function() {
+          this.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.02)';
+          this.style.borderColor = 'rgba(255, 255, 255, 0.7)';
+        });
+        // 点击输出特征信息 (轻量互动)
+        item.addEventListener('click', function() {
+          const label = this.querySelector('.label')?.innerText || '特征';
+          const value = this.querySelector('.value')?.innerText?.trim() || '';
+          // 简单反馈: 闪一下状态
+          const badge = document.querySelector('.badge .status-text');
+          if (badge) {
+            const original = badge.innerText;
+            badge.innerText = `→ ${label}`;
+            badge.style.opacity = '0.8';
+            setTimeout(() => {
+              badge.innerText = original;
+              badge.style.opacity = '0.7';
+            }, 800);
+          }
+        });
+      });
+
+      // ---- 动态时间显示 (科技感) ----
+      const statusEl = document.getElementById('liveStatus');
+      if (statusEl) {
+        function updateTime() {
+          const now = new Date();
+          const h = String(now.getHours()).padStart(2, '0');
+          const m = String(now.getMinutes()).padStart(2, '0');
+          const s = String(now.getSeconds()).padStart(2, '0');
+          statusEl.textContent = `${h}:${m}:${s}`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+      }
+
+      // ---- 卡片入场微动效 (鼠标追踪光晕) ----
+      const card = document.getElementById('appCard');
+      if (card) {
+        card.addEventListener('mousemove', function(e) {
+          const rect = this.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width;
+          const y = (e.clientY - rect.top) / rect.height;
+          // 微调阴影方向 (精致感)
+          const shadowX = (x - 0.5) * 12;
+          const shadowY = (y - 0.5) * 12;
+          this.style.boxShadow = `
+            0 30px 80px rgba(20, 40, 80, 0.08),
+            0 10px 30px rgba(20, 40, 80, 0.04),
+            ${shadowX}px ${shadowY}px 40px rgba(43, 122, 255, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.7)
+          `;
+        });
+        card.addEventListener('mouseleave', function() {
+          this.style.boxShadow = `
+            0 30px 80px rgba(20, 40, 80, 0.08),
+            0 10px 30px rgba(20, 40, 80, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.7)
+          `;
+        });
+      }
+
+      // ---- 背景光晕随鼠标微动 (更高级) ----
+      const orbs = document.querySelectorAll('.orb');
+      document.addEventListener('mousemove', function(e) {
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        orbs.forEach((orb, i) => {
+          const speed = 6 + i * 2;
+          orb.style.transform = `translate(${x * speed}px, ${y * speed}px) scale(1.02)`;
+        });
+      });
+
+      // ---- 特性网格点击增加"科技涟漪" (极简) ----
+      // 已包含在点击事件中
+
+      console.log('虚无卡密 · 交互已激活');
+    })();
+  </script>
+
+</body>
+</html>
